@@ -326,3 +326,73 @@ textarea {
     visibility: visible;
     opacity: 1;
 }
+
+/* Added to your existing CSS */
+
+.matrix-section {
+    background: var(--card-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.button-group {
+    margin-bottom: 1rem;
+}
+
+.button-group .button {
+    width: 100%;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+}
+
+.tooltip-icon {
+    display: inline-block;
+    margin-left: 0.5rem;
+    cursor: help;
+}
+
+.graphical-results-wrapper {
+    background: var(--card-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+}
+
+.chart-container {
+    margin-bottom: 1rem;
+    min-height: 400px;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .input-row {
+        grid-template-columns: 1fr;
+    }
+}

@@ -55,6 +55,26 @@ function stringToMatrix(str) {
     }
 }
 
+function generateRandomMatrix2n() {
+    const cols = parseInt(document.getElementById('graphCols').value);
+    const c1 = parseInt(document.getElementById('graphC1').value);
+    const c2 = parseInt(document.getElementById('graphC2').value);
+    const forceSaddlePoint = document.getElementById('forceSaddlePoint2n').checked;
+    
+    const matrix = generateRandomMatrix(2, cols, c1, c2, forceSaddlePoint);
+    document.getElementById('graphMatrix2n').value = matrixToString(matrix);
+}
+
+function generateRandomMatrixm2() {
+    const rows = parseInt(document.getElementById('graphRows').value);
+    const c1 = parseInt(document.getElementById('graphC1m2').value);
+    const c2 = parseInt(document.getElementById('graphC2m2').value);
+    const forceSaddlePoint = document.getElementById('forceSaddlePointm2').checked;
+    
+    const matrix = generateRandomMatrix(rows, 2, c1, c2, forceSaddlePoint);
+    document.getElementById('graphMatrixm2').value = matrixToString(matrix);
+}
+
 // Matrix Generation and Handling
 function generateRandomMatrix(rows, cols, c1, c2, forceSaddlePoint = false) {
     if (forceSaddlePoint) {
@@ -275,179 +295,6 @@ function solvePureStrategy() {
     }
 }
 
-function solveGraphical() {
-    try {
-        if (currentChart) {
-            currentChart.destroy();
-        }
-
-        const matrix = stringToMatrix(document.getElementById('graphMatrix').value);
-        if (matrix.length !== 2) {
-            throw new Error('Матриця повинна мати рівно 2 рядки для графічного методу');
-        }
-
-        // Знаходимо точки перетину
-        let intersections = [];
-        for (let i = 0; i < matrix[0].length; i++) {
-            for (let j = i + 1; j < matrix[0].length; j++) {
-                const a1 = matrix[0][i];
-                const b1 = matrix[1][i];
-                const a2 = matrix[0][j];
-                const b2 = matrix[1][j];
-                
-                if ((b1-a1) !== (b2-a2)) {
-                    const p = (a1-a2)/((b2-a2)-(b1-a1));
-                    const v = a1 * (1-p) + b1 * p;
-                    // Додаємо точку тільки якщо вона лежить у відрізку [0,1]
-                    if (p > 0 && p < 1) {
-                        intersections.push({p, v, strategies: [i+1, j+1]});
-                    }
-                }
-            }
-        }
-
-        const points = 1000;
-        const probabilities = Array.from({length: points}, (_, i) => i/(points-1));
-
-        // Знаходимо точку максиміну на нижній огинаючій
-        let maximin = -Infinity;
-        let optimumPoint = null;
-        let allPoints = [...intersections];
-
-        // Аналізуємо тільки внутрішні точки та перетини
-        allPoints.forEach(point => {
-            const p = point.p;
-            if (p > 0 && p < 1) { // Перевіряємо тільки внутрішні точки
-                const values = [];
-                for (let j = 0; j < matrix[0].length; j++) {
-                    const value = matrix[0][j] * (1-p) + matrix[1][j] * p;
-                    values.push(value);
-                }
-                const minValue = Math.min(...values);
-                if (minValue > maximin) {
-                    maximin = minValue;
-                    optimumPoint = {p: p, v: minValue};
-                }
-            }
-        });
-
-        // Візуалізація
-        const datasets = [];
-        for (let j = 0; j < matrix[0].length; j++) {
-            datasets.push({
-                label: `Стратегія ${j + 1}`,
-                data: probabilities.map(p => ({
-                    x: p,
-                    y: matrix[0][j] * (1-p) + matrix[1][j] * p
-                })),
-                borderColor: `hsl(${360 * j / matrix[0].length}, 70%, 50%)`,
-                borderWidth: 2,
-                tension: 0.1,
-                fill: false
-            });
-        }
-
-        if (optimumPoint) {
-            datasets.push({
-                label: 'Оптимальна точка',
-                data: [{
-                    x: optimumPoint.p,
-                    y: optimumPoint.v
-                }],
-                backgroundColor: 'red',
-                borderColor: 'red',
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                showLine: false,
-                type: 'scatter'
-            });
-        }
-
-        const ctx = document.getElementById('graphCanvas').getContext('2d');
-        currentChart = new Chart(ctx, {
-            type: 'line',
-            data: { datasets },
-            options: {
-                responsive: true,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Графічний метод розв\'язання матричної гри',
-                        font: { size: 16 }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                if (context.dataset.label === 'Оптимальна точка') {
-                                    return `Оптимальна точка: (p=${context.parsed.x.toFixed(4)}, v=${context.parsed.y.toFixed(4)})`;
-                                }
-                                return `${context.dataset.label}: ${context.parsed.y.toFixed(4)}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        type: 'linear',
-                        title: {
-                            display: true,
-                            text: 'p - ймовірність першої стратегії',
-                            font: { size: 14 }
-                        },
-                        min: 0,
-                        max: 1
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Очікуваний виграш',
-                            font: { size: 14 }
-                        }
-                    }
-                }
-            }
-        });
-
-        let result = "Детальний аналіз розв'язку графічним методом:\n\n";
-        
-        result += "1. Аналіз точок перетину стратегій:\n";
-        if (intersections.length > 0) {
-            intersections.forEach((point, i) => {
-                result += `   Точка ${i+1}:\n`;
-                result += `   - Перетин стратегій ${point.strategies.join(' і ')}\n`;
-                result += `   - Ймовірність p₁ = ${point.p.toFixed(4)}\n`;
-                result += `   - Значення функції виграшу: ${point.v.toFixed(4)}\n`;
-            });
-        } else {
-            result += "   Точки перетину відсутні в допустимій області (0,1)\n";
-        }
-
-        result += "\n2. Оптимальний розв'язок:\n";
-        if (optimumPoint) {
-            result += "   а) Оптимальні змішані стратегії першого гравця:\n";
-            result += `      p₁* = ${optimumPoint.p.toFixed(4)}\n`;
-            result += `      p₂* = ${(1-optimumPoint.p).toFixed(4)}\n`;
-            result += `   б) Ціна гри: v = ${optimumPoint.v.toFixed(4)}\n`;
-            result += "\n   в) Інтерпретація розв'язку:\n";
-            result += `      - Перший гравець має обирати першу стратегію з ймовірністю ${(optimumPoint.p*100).toFixed(2)}%\n`;
-            result += `      - Другу стратегію - з ймовірністю ${((1-optimumPoint.p)*100).toFixed(2)}%\n`;
-            result += `      - При цьому його гарантований середній виграш складе ${optimumPoint.v.toFixed(4)} одиниць\n`;
-        } else {
-            result += "   Оптимальний розв'язок не знайдено в допустимій області (0,1)\n";
-            result += "   Рекомендується перевірити вхідні дані або спробувати метод чистих стратегій\n";
-        }
-
-        document.getElementById('graphResult').textContent = result;
-
-    } catch (error) {
-        document.getElementById('graphResult').textContent = "Помилка: " + error.message;
-    }
-}
-
 function solveLP() {
     try {
         const matrix = stringToMatrix(document.getElementById('lpMatrix').value);
@@ -529,174 +376,348 @@ function generateGraphMatrixM2() {
     document.getElementById('graphMatrix').value = matrixToString(matrix);
 }
 
-function solveGraphicalM2() {
+
+// Function to create chart configuration
+function createChartConfig(datasets, title) {
+    return {
+        type: 'line',
+        data: { datasets },
+        options: {
+            responsive: true,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: title,
+                    font: { size: 16 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.dataset.label === 'Оптимальна точка') {
+                                return `Оптимальна точка: (p=${context.parsed.x.toFixed(4)}, v=${context.parsed.y.toFixed(4)})`;
+                            }
+                            return `${context.dataset.label}: ${context.parsed.y.toFixed(4)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    title: {
+                        display: true,
+                        text: 'p - ймовірність першої стратегії',
+                        font: { size: 14 }
+                    },
+                    min: 0,
+                    max: 1
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Очікуваний виграш',
+                        font: { size: 14 }
+                    }
+                }
+            }
+        }
+    };
+}
+
+function solveGraphical() {
     try {
         if (currentChart) {
             currentChart.destroy();
         }
 
         const matrix = stringToMatrix(document.getElementById('graphMatrix').value);
+        if (matrix.length !== 2) {
+            throw new Error('Матриця повинна мати рівно 2 рядки для графічного методу');
+        }
+
+        const { optimumPoint, matrix: processedMatrix } = findOptimalGraphicalSolution(matrix, false);
+        const datasets = createChartDatasets(processedMatrix, optimumPoint);
+        const ctx = document.getElementById('graphCanvas').getContext('2d');
+        currentChart = new Chart(ctx, createChartConfig(datasets, 'Графічний метод розв\'язання матричної гри (2×n)'));
+
+        // Generate result text
+        let result = "Оптимальний розв'язок гри:\n\n";
+        if (optimumPoint) {
+            result += `1. Оптимальні змішані стратегії першого гравця:\n`;
+            result += `   p₁* = ${optimumPoint.p.toFixed(4)}\n`;
+            result += `   p₂* = ${(1-optimumPoint.p).toFixed(4)}\n\n`;
+            result += `2. Ціна гри: v = ${optimumPoint.v.toFixed(4)}\n`;
+        } else {
+            result += "Оптимальний розв'язок не знайдено в допустимій області (0,1)\n";
+        }
+
+        document.getElementById('graphResult').textContent = result;
+    } catch (error) {
+        document.getElementById('graphResult').textContent = "Помилка: " + error.message;
+    }
+}
+
+
+// Helper function for generating random matrix with saddle point if needed
+function generateRandomMatrix(rows, cols, c1, c2, forceSaddlePoint) {
+    if (forceSaddlePoint) {
+        return generateMatrixWithSaddlePoint(rows, cols, c1, c2);
+    }
+
+    let matrix = [];
+    // Generate at least 4 different values
+    let uniqueValues = new Set();
+    while (uniqueValues.size < 4) {
+        uniqueValues.add(Math.floor(Math.random() * (c2 - c1 + 1)) + c1);
+    }
+    let values = Array.from(uniqueValues);
+    
+    for (let i = 0; i < rows; i++) {
+        let row = [];
+        for (let j = 0; j < cols; j++) {
+            if (values.length > 0 && Math.random() < 0.5) {
+                row.push(values.pop());
+            } else {
+                row.push(Math.floor(Math.random() * (c2 - c1 + 1)) + c1);
+            }
+        }
+        matrix.push(row);
+    }
+    return matrix;
+}
+
+
+
+// Function to calculate payoff value for a given probability and column
+function calculatePayoff(matrix, colIndex, p) {
+    // For 2×n matrix:
+    // Payoff = p*a1j + (1-p)*a2j where j is the column index
+    return p * matrix[0][colIndex] + (1-p) * matrix[1][colIndex];
+}
+
+function findOptimalGraphicalSolution(matrix, isM2) {
+    // For m×2, transpose to make it easier to work with
+    if (isM2) {
+        matrix = matrix[0].map((_, i) => matrix.map(row => row[i]));
+    }
+
+    console.log("Input matrix:", matrix);
+    
+    let extreme_points = [];
+    const numLines = matrix[0].length;
+    
+    // For each pair of lines, find intersection
+    for (let i = 0; i < numLines; i++) {
+        let points = [];
+        for (let j = 0; j < numLines; j++) {
+            if (i !== j) {
+                let line1, line2;
+                line1 = { a: matrix[0][i], b: matrix[1][i] };
+                line2 = { a: matrix[0][j], b: matrix[1][j] };
+                
+                const intersection = findIntersection(
+                    line1.a, line1.b,  // First line: (0,a1) to (1,b1)
+                    line2.a, line2.b   // Second line: (0,a2) to (1,b2)
+                );
+
+                console.log(`Checking intersection between lines ${i} and ${j}:`, intersection);
+                
+                if (intersection && intersection.p >= 0 && intersection.p <= 1) {
+                    console.log(`Found intersection between lines ${i} and ${j}:`, intersection);
+                    points.push(intersection);
+                }
+            }
+        }
+        
+        console.log(`Points for line ${i}:`, points);
+        
+        if (points.length > 0) {
+            // For m×2: find minimum point for this line's intersections
+            if (isM2) {
+                const minPoint = points.reduce((min, p) => p.v < min.v ? p : min);
+                extreme_points.push(minPoint);
+            }
+            // For 2×n: find maximum point for this line's intersections
+            else {
+                const maxPoint = points.reduce((max, p) => p.v > max.v ? p : max);
+                extreme_points.push(maxPoint);
+            }
+        }
+    }
+
+    console.log("Extreme points:", extreme_points);
+    
+    let optimumPoint = null;
+    if (extreme_points.length > 0) {
+        // For m×2: take maximum of minimums
+        if (isM2) {
+            optimumPoint = extreme_points.reduce((max, p) => p.v > max.v ? p : max);
+        }
+        // For 2×n: take minimum of maximums
+        else {
+            optimumPoint = extreme_points.reduce((min, p) => p.v < min.v ? p : min);
+        }
+    }
+
+    console.log("Optimum point:", optimumPoint);
+
+    return {
+        optimumPoint,
+        matrix: isM2 ? matrix[0].map((_, i) => matrix.map(row => row[i])) : matrix,
+        isM2
+    };
+}
+
+function findIntersection(a1, b1, a2, b2) {
+    // Given two lines going from (0,a) to (1,b)
+    const pointA = [0, a1];
+    const pointB = [1, b1];
+    const pointC = [0, a2];
+    const pointD = [1, b2];
+
+    console.log("Points:", pointA, pointB, pointC, pointD);
+
+    // Calculate line coefficients
+    const a1_coef = b1 - a1;  // Simplified from pointB[1] - pointA[1]
+    const b1_coef = -1;       // Simplified from pointA[0] - pointB[0]
+    const c1 = a1_coef * pointA[0] + b1_coef * pointA[1];
+
+    const a2_coef = b2 - a2;  // Simplified from pointD[1] - pointC[1]
+    const b2_coef = -1;       // Simplified from pointC[0] - pointD[0]
+    const c2 = a2_coef * pointC[0] + b2_coef * pointC[1];
+
+    const denominator = a1_coef * b2_coef - a2_coef * b1_coef;
+
+    if (Math.abs(denominator) < 1e-10) {
+        console.log("Lines are parallel");
+        return null; // Lines are parallel
+    }
+
+    const x = (b2_coef * c1 - b1_coef * c2) / denominator;
+    const y = (a1_coef * c2 - a2_coef * c1) / denominator;
+
+    return { p: x, v: y };
+}
+
+// Update solve functions to pass isM2 parameter
+function solveGraphical2n() {
+    try {
+        if (currentChart) {
+            currentChart.destroy();
+        }
+
+        const matrix = stringToMatrix(document.getElementById('graphMatrix2n').value);
+        if (matrix.length !== 2) {
+            throw new Error('Матриця повинна мати рівно 2 рядки для графічного методу');
+        }
+
+        const result = findOptimalGraphicalSolution(matrix, false);
+        const datasets = createChartDatasets(matrix, result.optimumPoint, false);
+        const ctx = document.getElementById('graphCanvas2n').getContext('2d');
+        currentChart = new Chart(ctx, createChartConfig(datasets, 'Графічний метод (2×n) - максимін'));
+
+        let resultText = "Оптимальний розв'язок гри:\n\n";
+        if (result.optimumPoint) {
+            resultText += `1. Оптимальні змішані стратегії першого гравця (максимін):\n`;
+            resultText += `   p₁* = ${result.optimumPoint.p.toFixed(4)}\n`;
+            resultText += `   p₂* = ${(1-result.optimumPoint.p).toFixed(4)}\n\n`;
+            resultText += `2. Ціна гри: v = ${result.optimumPoint.v.toFixed(4)}\n`;
+        } else {
+            resultText += "Оптимальний розв'язок не знайдено в допустимій області (0,1)\n";
+        }
+
+        document.getElementById('graphResult2n').textContent = resultText;
+    } catch (error) {
+        document.getElementById('graphResult2n').textContent = "Помилка: " + error.message;
+    }
+}
+
+function solveGraphicalM2() {
+    try {
+        if (currentChart) {
+            currentChart.destroy();
+        }
+
+        const matrix = stringToMatrix(document.getElementById('graphMatrixm2').value);
         if (matrix[0].length !== 2) {
             throw new Error('Матриця повинна мати рівно 2 стовпці для графічного методу');
         }
 
-        // Знаходимо точки перетину
-        let intersections = [];
-        for (let i = 0; i < matrix.length; i++) {
-            for (let j = i + 1; j < matrix.length; j++) {
-                const a1 = matrix[i][0];
-                const b1 = matrix[i][1];
-                const a2 = matrix[j][0];
-                const b2 = matrix[j][1];
-
-                if ((b1-a1) !== (b2-a2)) {
-                    const p = (a1-a2)/((b2-a2)-(b1-a1));
-                    const v = a1 * (1-p) + b1 * p;
-                    // Додаємо точку тільки якщо вона лежить у відрізку [0,1]
-                    if (p > 0 && p < 1) {
-                        intersections.push({p, v, strategies: [i+1, j+1]});
-                    }
-                }
-            }
-        }
-
-        const points = 1000;
-        const probabilities = Array.from({length: points}, (_, i) => i/(points-1));
-
-        // Знаходимо точку максиміну на нижній огинаючій
-        let maximin = -Infinity;
-        let optimumPoint = null;
-        let allPoints = [...intersections];
-
-        // Аналізуємо тільки внутрішні точки та перетини
-        allPoints.forEach(point => {
-            const p = point.p;
-            if (p > 0 && p < 1) { // Перевіряємо тільки внутрішні точки
-                const values = matrix.map(row => row[0] * (1-p) + row[1] * p);
-                const minValue = Math.min(...values);
-                if (minValue > maximin) {
-                    maximin = minValue;
-                    optimumPoint = {p: p, v: minValue};
-                }
-            }
-        });
-
-        // Візуалізація
-        const datasets = [];
-        for (let j = 0; j < matrix.length; j++) {
-            datasets.push({
-                label: `Стратегія ${j + 1}`,
-                data: probabilities.map(p => ({
-                    x: p,
-                    y: matrix[j][0] * (1-p) + matrix[j][1] * p
-                })),
-                borderColor: `hsl(${360 * j / matrix.length}, 70%, 50%)`,
-                borderWidth: 2,
-                tension: 0.1,
-                fill: false
-            });
-        }
-
-        if (optimumPoint) {
-            datasets.push({
-                label: 'Оптимальна точка',
-                data: [{
-                    x: optimumPoint.p,
-                    y: optimumPoint.v
-                }],
-                backgroundColor: 'red',
-                borderColor: 'red',
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                showLine: false,
-                type: 'scatter'
-            });
-        }
-
+        const result = findOptimalGraphicalSolution(matrix, true);
+        const datasets = createChartDatasets(matrix, result.optimumPoint, true);
         const ctx = document.getElementById('graphCanvasM2').getContext('2d');
-        currentChart = new Chart(ctx, {
-            type: 'line',
-            data: { datasets },
-            options: {
-                responsive: true,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Графічний метод розв\'язання матричної гри (m×2)',
-                        font: { size: 16 }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                if (context.dataset.label === 'Оптимальна точка') {
-                                    return `Оптимальна точка: (p=${context.parsed.x.toFixed(4)}, v=${context.parsed.y.toFixed(4)})`;
-                                }
-                                return `${context.dataset.label}: ${context.parsed.y.toFixed(4)}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        type: 'linear',
-                        title: {
-                            display: true,
-                            text: 'p - ймовірність першої стратегії',
-                            font: { size: 14 }
-                        },
-                        min: 0,
-                        max: 1
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Очікуваний виграш',
-                            font: { size: 14 }
-                        }
-                    }
-                }
-            }
-        });
+        currentChart = new Chart(ctx, createChartConfig(datasets, 'Графічний метод (m×2) - мінімакс'));
 
-        let result = "Детальний аналіз розв'язку графічним методом (m×2):\n\n";
-        
-        result += "1. Аналіз точок перетину стратегій:\n";
-        if (intersections.length > 0) {
-            intersections.forEach((point, i) => {
-                result += `   Точка ${i+1}:\n`;
-                result += `   - Перетин стратегій ${point.strategies.join(' і ')}\n`;
-                result += `   - Ймовірність p₁ = ${point.p.toFixed(4)}\n`;
-                result += `   - Значення функції виграшу: ${point.v.toFixed(4)}\n`;
-            });
+        let resultText = "Оптимальний розв'язок гри:\n\n";
+        if (result.optimumPoint) {
+            resultText += `1. Оптимальні змішані стратегії другого гравця (мінімакс):\n`;
+            resultText += `   q₁* = ${result.optimumPoint.p.toFixed(4)}\n`;
+            resultText += `   q₂* = ${(1-result.optimumPoint.p).toFixed(4)}\n\n`;
+            resultText += `2. Ціна гри: v = ${result.optimumPoint.v.toFixed(4)}\n`;
         } else {
-            result += "   Точки перетину відсутні в допустимій області (0,1)\n";
+            resultText += "Оптимальний розв'язок не знайдено в допустимій області (0,1)\n";
         }
 
-        result += "\n2. Оптимальний розв'язок:\n";
-        if (optimumPoint) {
-            result += "   а) Оптимальні змішані стратегії першого гравця:\n";
-            result += `      p₁* = ${optimumPoint.p.toFixed(4)}\n`;
-            result += `      p₂* = ${(1-optimumPoint.p).toFixed(4)}\n`;
-            result += `   б) Ціна гри: v = ${optimumPoint.v.toFixed(4)}\n`;
-            result += "\n   в) Інтерпретація розв'язку:\n";
-            result += `      - Перший гравець має обирати першу стратегію з ймовірністю ${(optimumPoint.p*100).toFixed(2)}%\n`;
-            result += `      - Другу стратегію - з ймовірністю ${((1-optimumPoint.p)*100).toFixed(2)}%\n`;
-            result += `      - При цьому його гарантований середній виграш складе ${optimumPoint.v.toFixed(4)} одиниць\n`;
-        } else {
-            result += "   Оптимальний розв'язок не знайдено в допустимій області (0,1)\n";
-            result += "   Рекомендується перевірити вхідні дані або спробувати метод чистих стратегій\n";
-        }
-
-        document.getElementById('graphResultM2').textContent = result;
-
+        document.getElementById('graphResultM2').textContent = resultText;
     } catch (error) {
         document.getElementById('graphResultM2').textContent = "Помилка: " + error.message;
     }
 }
+
+function createChartDatasets(matrix, optimumPoint, isM2) {
+    // Lines creation remains the same as in previous version
+    let datasets = [];
+    
+    if (!isM2) {
+        datasets = Array(matrix[0].length).fill(0).map((_, j) => ({
+            label: `Стратегія ${j + 1}`,
+            data: [
+                { x: 0, y: matrix[0][j] },
+                { x: 1, y: matrix[1][j] }
+            ],
+            borderColor: `hsl(${360 * j / matrix[0].length}, 70%, 50%)`,
+            borderWidth: 2,
+            tension: 0,
+            fill: false
+        }));
+    } else {
+        datasets = Array(matrix.length).fill(0).map((_, i) => ({
+            label: `Стратегія ${i + 1}`,
+            data: [
+                { x: 0, y: matrix[i][0] },
+                { x: 1, y: matrix[i][1] }
+            ],
+            borderColor: `hsl(${360 * i / matrix.length}, 70%, 50%)`,
+            borderWidth: 2,
+            tension: 0,
+            fill: false
+        }));
+    }
+
+    // Add optimal point if exists
+    if (optimumPoint) {
+        datasets.push({
+            label: 'Оптимальна точка',
+            data: [{
+                x: optimumPoint.p,
+                y: optimumPoint.v
+            }],
+            backgroundColor: 'red',
+            borderColor: 'red',
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            showLine: false,
+            type: 'scatter'
+        });
+    }
+
+    return datasets;
+}
+
 
 // Initialize default tab on load
 document.addEventListener('DOMContentLoaded', function() {

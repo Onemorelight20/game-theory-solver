@@ -90,89 +90,110 @@
                 <h4>Опис завдання</h4>
                 <p>Вибрати матрицю А розміру (2×n) і матрицю B розміру (m×2) та знайти розв'язок гри у змішаних стратегіях, використовуючи графічний метод.</p>
                 <p>У матрицях має бути не менше трьох попарно різних елементів і таких, що їх величини належать відрізку С1 і С2.</p>
-                <p>Розмірність матриць та межі С1 і С2 вибрати з таблиці.</p>
             </div>
         
-            <!-- First Matrix (2×N) -->
+            <!-- 2×n Matrix Section -->
             <div class="matrix-section">
-                <h4>Матриця A (2×n)</h4>
+                <h4>Матриця 2×n</h4>
+                
                 <div class="input-group">
-                    <label for="graph2NColumns">Кількість стовпців (n):</label>
-                    <input type="number" id="graph2NColumns" value="3" min="2" max="5">
-                </div>
-        
-                <div class="input-group">
-                    <label>Діапазон значень</label>
                     <div class="input-row">
                         <div>
-                            <label for="graph2NC1">C1 (мінімум):</label>
-                            <input type="number" id="graph2NC1" value="-10">
+                            <label for="graphCols">Кількість стовпців (n):</label>
+                            <input type="number" id="graphCols" min="2" max="6" value="3">
                         </div>
+                        
                         <div>
-                            <label for="graph2NC2">C2 (максимум):</label>
-                            <input type="number" id="graph2NC2" value="10">
+                            <label for="graphC1">C1 (мінімум):</label>
+                            <input type="number" id="graphC1" value="-4">
+                        </div>
+                        
+                        <div>
+                            <label for="graphC2">C2 (максимум):</label>
+                            <input type="number" id="graphC2" value="5">
+                        </div>
+                    </div>
+        
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="forceSaddlePoint2n">
+                        <label for="forceSaddlePoint2n">Згенерувати матрицю з сідловою точкою</label>
+                        <div class="tooltip-icon">
+                            ℹ️ <span class="tooltip-text">Якщо матриця має сідлові точки, то гра має розв'язок у чистих стратегіях. 
+                            Проте графічний метод можна використати для знаходження розв'язку у змішаних стратегіях.</span>
                         </div>
                     </div>
                 </div>
         
-                <button class="button" onclick="generateGraphMatrix2N()">Згенерувати випадкову матрицю 2×n</button>
-        
-                <div class="input-group">
-                    <label for="graph2NMatrix">Платіжна матриця (2 рядки)</label>
-                    <textarea id="graph2NMatrix" rows="3" placeholder="Введіть матрицю 2×n (числа, розділені пробілами, новий рядок для кожного рядка матриці)"></textarea>
+                <div class="button-group">
+                    <button class="button" onclick="generateRandomMatrix2n()">Згенерувати випадкову матрицю 2×n</button>
                 </div>
         
-                <button class="button" onclick="solveGraphical2N()">Розв'язати</button>
+                <div class="input-group">
+                    <label>Платіжна матриця (2 рядки)</label>
+                    <textarea id="graphMatrix2n" rows="3"></textarea>
+                </div>
+        
+                <button class="button" onclick="solveGraphical2n()">Розв'язати</button>
         
                 <div class="graphical-results-wrapper">
                     <div class="chart-container">
-                        <canvas id="graph2NCanvas"></canvas>
+                        <canvas id="graphCanvas2n"></canvas>
                     </div>
-                    
                     <div class="result-container">
-                        <div id="graph2NResult" class="result"></div>
+                        <pre id="graphResult2n" class="result"></pre>
                     </div>
                 </div>
             </div>
         
-            <!-- Second Matrix (M×2) -->
+            <!-- m×2 Matrix Section -->
             <div class="matrix-section">
-                <h4>Матриця B (m×2)</h4>
+                <h4>Матриця m×2</h4>
+                
                 <div class="input-group">
-                    <label for="graphM2Rows">Кількість рядків (m):</label>
-                    <input type="number" id="graphM2Rows" value="3" min="2" max="5">
-                </div>
-        
-                <div class="input-group">
-                    <label>Діапазон значень</label>
                     <div class="input-row">
                         <div>
-                            <label for="graphM2C1">C1 (мінімум):</label>
-                            <input type="number" id="graphM2C1" value="-10">
+                            <label for="graphRows">Кількість рядків (m):</label>
+                            <input type="number" id="graphRows" min="2" max="6" value="3">
                         </div>
+                        
                         <div>
-                            <label for="graphM2C2">C2 (максимум):</label>
-                            <input type="number" id="graphM2C2" value="10">
+                            <label for="graphC1m2">C1 (мінімум):</label>
+                            <input type="number" id="graphC1m2" value="-4">
+                        </div>
+                        
+                        <div>
+                            <label for="graphC2m2">C2 (максимум):</label>
+                            <input type="number" id="graphC2m2" value="5">
+                        </div>
+                    </div>
+        
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="forceSaddlePointm2">
+                        <label for="forceSaddlePointm2">Згенерувати матрицю з сідловою точкою</label>
+                        <div class="tooltip-icon">
+                            ℹ️ <span class="tooltip-text">Якщо матриця має сідлові точки, то гра має розв'язок у чистих стратегіях. 
+                            Проте графічний метод можна використати для знаходження розв'язку у змішаних стратегіях.</span>
                         </div>
                     </div>
                 </div>
         
-                <button class="button" onclick="generateGraphMatrixM2()">Згенерувати випадкову матрицю m×2</button>
+                <div class="button-group">
+                    <button class="button" onclick="generateRandomMatrixm2()">Згенерувати випадкову матрицю m×2</button>
+                </div>
         
                 <div class="input-group">
-                    <label for="graphM2Matrix">Платіжна матриця (m рядків, 2 стовпці)</label>
-                    <textarea id="graphM2Matrix" rows="5" placeholder="Введіть матрицю m×2 (числа, розділені пробілами, новий рядок для кожного рядка матриці)"></textarea>
+                    <label>Платіжна матриця (m рядків, 2 стовпці)</label>
+                    <textarea id="graphMatrixm2" rows="6"></textarea>
                 </div>
         
                 <button class="button" onclick="solveGraphicalM2()">Розв'язати</button>
         
                 <div class="graphical-results-wrapper">
                     <div class="chart-container">
-                        <canvas id="graphM2Canvas"></canvas>
+                        <canvas id="graphCanvasM2"></canvas>
                     </div>
-                    
                     <div class="result-container">
-                        <div id="graphM2Result" class="result"></div>
+                        <pre id="graphResultM2" class="result"></pre>
                     </div>
                 </div>
             </div>
