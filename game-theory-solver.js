@@ -520,8 +520,8 @@ function findOptimalGraphicalSolution(matrix, isM2) {
                 line2 = { a: matrix[0][j], b: matrix[1][j] };
                 
                 const intersection = findIntersection(
-                    line1.a, line1.b,  // First line: (0,a1) to (1,b1)
-                    line2.a, line2.b   // Second line: (0,a2) to (1,b2)
+                    line1.a, line1.b,
+                    line2.a, line2.b
                 );
 
                 console.log(`Checking intersection between lines ${i} and ${j}:`, intersection);
@@ -540,13 +540,17 @@ function findOptimalGraphicalSolution(matrix, isM2) {
             if (isM2) {
                 const minPoint = points.reduce((min, p) => p.v < min.v ? p : min);
                 extreme_points.push(minPoint);
+                console.log("Minimum point for line", i, ":", minPoint);
             }
             // For 2×n: find maximum point for this line's intersections
             else {
                 const maxPoint = points.reduce((max, p) => p.v > max.v ? p : max);
                 extreme_points.push(maxPoint);
+                console.log("Maximum point for line", i, ":", maxPoint);
             }
+            
         }
+        console.log("Extreme points after line", i, ":", extreme_points);
     }
 
     console.log("Extreme points:", extreme_points);
@@ -582,15 +586,16 @@ function findIntersection(a1, b1, a2, b2) {
     console.log("Points:", pointA, pointB, pointC, pointD);
 
     // Calculate line coefficients
-    const a1_coef = b1 - a1;  // Simplified from pointB[1] - pointA[1]
-    const b1_coef = -1;       // Simplified from pointA[0] - pointB[0]
+    const a1_coef = pointB[1] - pointA[1];
+    const b1_coef = pointA[0] - pointB[0];
     const c1 = a1_coef * pointA[0] + b1_coef * pointA[1];
 
-    const a2_coef = b2 - a2;  // Simplified from pointD[1] - pointC[1]
-    const b2_coef = -1;       // Simplified from pointC[0] - pointD[0]
+    const a2_coef = pointD[1] - pointC[1]; 
+    const b2_coef = pointC[0] - pointD[0];
     const c2 = a2_coef * pointC[0] + b2_coef * pointC[1];
 
     const denominator = a1_coef * b2_coef - a2_coef * b1_coef;
+    console.log("Denominator:", denominator);
 
     if (Math.abs(denominator) < 1e-10) {
         console.log("Lines are parallel");
