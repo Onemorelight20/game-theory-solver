@@ -301,70 +301,68 @@ function solveLP() {
         const rows = matrix.length;
         const cols = matrix[0].length;
 
+        // Validate matrix has appropriate dimensions
+        if (rows < 2 || cols < 2) {
+            throw new Error('Матриця повинна мати розмір щонайменше 2×2');
+        }
+
         let result = "Формулювання та аналіз задачі лінійного програмування:\n\n";
         
-        result += "1. Перетворення гри до задачі ЛП:\n";
-        result += "   Вихідна матриця має розмірність " + rows + "×" + cols + "\n\n";
+        result += "1. Матрична гра двох гравців з нульовою сумою:\n";
+        result += "   Вихідна матриця має розмірність " + rows + "×" + cols + "\n";
+        result += "   Гравець 1 обирає рядок (має " + rows + " стратегій)\n";
+        result += "   Гравець 2 обирає стовпець (має " + cols + " стратегій)\n\n";
 
         result += "2. Задача максимізації для першого гравця:\n";
-        result += "   а) Цільова функція:\n";
-        result += "      v → max\n\n";
-        result += "   б) Обмеження:\n";
+        result += "   а) Змінні: x1, x2, ..., x" + rows + "\n";
+        result += "   б) Цільова функція:\n";
+        result += "      min(Z = x1 + x2 + ... + x" + rows + ")\n";
+        result += "      Z* - оптимальне значення цільової функції\n\n";
+        result += "   в) Обмеження:\n";
         
         // Generate constraints for player 1
         for (let j = 0; j < cols; j++) {
-            let constraint = matrix.map((row, i) => `${row[j]}y${i+1}`).join(' + ');
-            result += `      ${constraint} ≥ v\n`;
+            let constraint = matrix.map((row, i) => `${row[j]}x${i+1}`).join(' + ');
+            result += `      ${constraint} ≥ 1\n`;
         }
-        
-        result += `      y₁ + y₂ + ... + y${rows} = 1\n`;
-        result += "      yᵢ ≥ 0 для всіх i = 1,...," + rows + "\n\n";
+        result += `      xi ≥ 0 для всіх i = 1,...,${rows}\n\n`;
 
         result += "3. Задача мінімізації для другого гравця:\n";
-        result += "   а) Цільова функція:\n";
-        result += "      w → min\n\n";
-        result += "   б) Обмеження:\n";
+        result += "   а) Змінні: y1, y2, ..., y" + cols + "\n";
+        result += "   б) Цільова функція:\n";
+        result += "      max(F = y1 + y2 + ... + y" + cols + ")\n";
+        result += "      F* - оптимальне значення цільової функції\n\n";
+        result += "   в) Обмеження:\n";
         
         // Generate constraints for player 2
         for (let i = 0; i < rows; i++) {
-            let constraint = matrix[i].map((val, j) => `${val}x${j+1}`).join(' + ');
-            result += `      ${constraint} ≤ w\n`;
+            let constraint = matrix[i].map((val, j) => `${val}y${j+1}`).join(' + ');
+            result += `      ${constraint} ≤ 1\n`;
         }
-        
-        result += `      x₁ + x₂ + ... + x${cols} = 1\n`;
-        result += "      xⱼ ≥ 0 для всіх j = 1,...," + cols + "\n\n";
+        result += `      yj ≥ 0 для всіх j = 1,...,${cols}\n\n`;
 
-        result += "4. Взаємозв'язок між задачами:\n";
-        result += "   а) Задачі є взаємно двоїстими\n";
-        result += "   б) Оптимальні значення цільових функцій пов'язані співвідношенням:\n";
-        result += "      v* = 1/w*\n\n";
+        result += "4. Зв'язок між розв'язками:\n";
+        result += "   а) Оптимальні змішані стратегії першого гравця:\n";
+        result += "      pi = xi* × V, де V - ціна гри\n";
+        result += "      V = 1/Z* (де Z* - оптимальне значення першої задачі)\n\n";
+        result += "   б) Оптимальні змішані стратегії другого гравця:\n";
+        result += "      qj = yj* × V\n";
+        result += "      V = 1/F* (де F* - оптимальне значення другої задачі)\n\n";
 
-        result += "5. Інтерпретація змінних:\n";
-        result += "   а) Для першого гравця:\n";
-        result += "      - yᵢ - компоненти оптимальної змішаної стратегії\n";
-        result += "      - v - гарантований середній виграш (ціна гри)\n\n";
-        result += "   б) Для другого гравця:\n";
-        result += "      - xⱼ - компоненти оптимальної змішаної стратегії\n";
-        result += "      - w - гарантований середній програш\n\n";
-
-        result += "6. Отримання розв'язку:\n";
-        result += "   а) Оптимальні стратегії першого гравця:\n";
-        result += "      pᵢ = yᵢ* × v*\n\n";
-        result += "   б) Оптимальні стратегії другого гравця:\n";
-        result += "      qⱼ = xⱼ* / w*\n\n";
-
-        result += "7. Рекомендації щодо розв'язання:\n";
+        result += "5. Розв'язання:\n";
         result += "   - Використати симплекс-метод для розв'язання обох задач\n";
-        result += "   - Перевірити умови оптимальності\n";
-        result += "   - Виконати нормування отриманих стратегій\n";
-        result += "   - Перевірити правильність розв'язку підстановкою в обмеження\n";
+        result += "   - Визначити ціну гри: V = 1/Z* = 1/F*\n";
+        result += "   - Знайти оптимальні стратегії:\n";
+        result += "     для першого гравця: pi = xi*/Z* для всіх i\n";
+        result += "     для другого гравця: qj = yj*/F* для всіх j\n";
+        result += "   - Перевірити виконання умов оптимальності:\n";
+        result += "     Z* = F* - означає, що знайдено оптимальний розв'язок\n";
 
         document.getElementById('lpResult').textContent = result;
     } catch (error) {
         document.getElementById('lpResult').textContent = "Помилка: " + error.message;
     }
 }
-
 
 function generateGraphMatrixM2() {
     const rows = parseInt(document.getElementById('graphCols').value);
@@ -376,57 +374,6 @@ function generateGraphMatrixM2() {
     document.getElementById('graphMatrix').value = matrixToString(matrix);
 }
 
-
-// Function to create chart configuration
-function createChartConfig(datasets, title) {
-    return {
-        type: 'line',
-        data: { datasets },
-        options: {
-            responsive: true,
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            plugins: {
-                title: {
-                    display: true,
-                    text: title,
-                    font: { size: 16 }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            if (context.dataset.label === 'Оптимальна точка') {
-                                return `Оптимальна точка: (p=${context.parsed.x.toFixed(4)}, v=${context.parsed.y.toFixed(4)})`;
-                            }
-                            return `${context.dataset.label}: ${context.parsed.y.toFixed(4)}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    type: 'linear',
-                    title: {
-                        display: true,
-                        text: 'p - ймовірність першої стратегії',
-                        font: { size: 14 }
-                    },
-                    min: 0,
-                    max: 1
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Очікуваний виграш',
-                        font: { size: 14 }
-                    }
-                }
-            }
-        }
-    };
-}
 
 function solveGraphical() {
     try {
@@ -488,15 +435,6 @@ function generateRandomMatrix(rows, cols, c1, c2, forceSaddlePoint) {
         matrix.push(row);
     }
     return matrix;
-}
-
-
-
-// Function to calculate payoff value for a given probability and column
-function calculatePayoff(matrix, colIndex, p) {
-    // For 2×n matrix:
-    // Payoff = p*a1j + (1-p)*a2j where j is the column index
-    return p * matrix[0][colIndex] + (1-p) * matrix[1][colIndex];
 }
 
 function findOptimalGraphicalSolution(matrix, isM2) {
@@ -608,7 +546,6 @@ function findIntersection(a1, b1, a2, b2) {
     return { p: x, v: y };
 }
 
-// Update solve functions to pass isM2 parameter
 function solveGraphical2n() {
     try {
         if (currentChart) {
@@ -623,16 +560,45 @@ function solveGraphical2n() {
         const result = findOptimalGraphicalSolution(matrix, false);
         const datasets = createChartDatasets(matrix, result.optimumPoint, false);
         const ctx = document.getElementById('graphCanvas2n').getContext('2d');
-        currentChart = new Chart(ctx, createChartConfig(datasets, 'Графічний метод (2×n) - максимін'));
+        currentChart = new Chart(ctx, createChartConfig(datasets, 'Графічний метод (2×n)', false));
 
-        let resultText = "Оптимальний розв'язок гри:\n\n";
+        let resultText = "Розв'язок матричної гри (2×n):\n\n";
+        
+        // Theoretical explanation
+        resultText += "1. Теоретичне обґрунтування:\n";
+        resultText += "   Графічний метод базується на геометричній інтерпретації змішаних стратегій\n";
+        resultText += "   та їх середніх виграшів. Для гри 2×n:\n";
+        resultText += "   - Змішана стратегія p = (x, 1-x), де x ∈ [0,1]\n";
+        resultText += "   - Кожна стратегія другого гравця дає пряму H(j) = a1j×x + a2j×(1-x)\n\n";
+        
+        // Geometric interpretation
+        resultText += "2. Геометрична інтерпретація:\n";
+        resultText += "   - По горизонтальній осі (x) відкладається ймовірність вибору першої стратегії першим гравцем\n";
+        resultText += "   - По вертикальній осі відкладаються значення функції виграшу H(x)\n";
+        resultText += "   - Кожна пряма відповідає функції виграшу для відповідної стратегії другого гравця\n";
+        resultText += "   - Нижня огинаюча всіх прямих визначає максимальний гарантований виграш першого гравця\n";
+        resultText += "   - Точка максимуму нижньої огинаючої визначає оптимальну змішану стратегію\n\n";
+        
+        // Solution analysis
+        resultText += "3. Аналіз розв'язку:\n";
         if (result.optimumPoint) {
-            resultText += `1. Оптимальні змішані стратегії першого гравця (максимін):\n`;
-            resultText += `   p₁* = ${result.optimumPoint.p.toFixed(4)}\n`;
-            resultText += `   p₂* = ${(1-result.optimumPoint.p).toFixed(4)}\n\n`;
-            resultText += `2. Ціна гри: v = ${result.optimumPoint.v.toFixed(4)}\n`;
+            resultText += `   а) Оптимальна змішана стратегія першого гравця:\n`;
+            resultText += `      p1* = ${result.optimumPoint.p.toFixed(4)} (перша стратегія)\n`;
+            resultText += `      p2* = ${(1-result.optimumPoint.p).toFixed(4)} (друга стратегія)\n`;
+            resultText += `   б) Ціна гри: v = ${result.optimumPoint.v.toFixed(4)}\n`;
+            resultText += "   в) Геометричний зміст:\n";
+            resultText += "      - Точка максимуму знаходиться на перетині прямих\n";
+            resultText += "      - Це забезпечує найбільший гарантований виграш\n";
+            resultText += "      - Відхилення від цієї точки невигідне першому гравцю\n\n";
         } else {
-            resultText += "Оптимальний розв'язок не знайдено в допустимій області (0,1)\n";
+            resultText += "   Оптимальний розв'язок не знайдено в допустимій області [0,1]\n";
+        }
+
+        // Mathematical verification
+        resultText += "4. Математична перевірка:\n";
+        resultText += "   а) Рівняння прямих для кожної стратегії:\n";
+        for (let j = 0; j < matrix[0].length; j++) {
+            resultText += `      H${j+1}(x) = ${matrix[0][j]}x + ${matrix[1][j]}(1-x)\n`;
         }
 
         document.getElementById('graphResult2n').textContent = resultText;
@@ -655,22 +621,120 @@ function solveGraphicalM2() {
         const result = findOptimalGraphicalSolution(matrix, true);
         const datasets = createChartDatasets(matrix, result.optimumPoint, true);
         const ctx = document.getElementById('graphCanvasM2').getContext('2d');
-        currentChart = new Chart(ctx, createChartConfig(datasets, 'Графічний метод (m×2) - мінімакс'));
+        currentChart = new Chart(ctx, createChartConfig(datasets, 'Графічний метод (m×2)', true));
 
-        let resultText = "Оптимальний розв'язок гри:\n\n";
+        let resultText = "Розв'язок матричної гри (m×2):\n\n";
+        
+        // Theoretical explanation
+        resultText += "1. Теоретичне обґрунтування:\n";
+        resultText += "   Для гри m×2 графічний метод використовує:\n";
+        resultText += "   - Змішану стратегію q = (y, 1-y), де y ∈ [0,1]\n";
+        resultText += "   - Кожна стратегія першого гравця дає пряму H(i) = ai1×y + ai2×(1-y)\n\n";
+        
+        // Geometric interpretation
+        resultText += "2. Геометрична інтерпретація:\n";
+        resultText += "   - По горизонтальній осі (y) відкладається ймовірність вибору першої стратегії другим гравцем\n";
+        resultText += "   - По вертикальній осі відкладаються значення функції виграшу H(y)\n";
+        resultText += "   - Кожна пряма відповідає функції виграшу для відповідної стратегії першого гравця\n";
+        resultText += "   - Верхня огинаюча всіх прямих визначає мінімальний гарантований програш другого гравця\n";
+        resultText += "   - Точка мінімуму верхньої огинаючої визначає оптимальну змішану стратегію\n\n";
+        
+        // Solution analysis
+        resultText += "3. Аналіз розв'язку:\n";
         if (result.optimumPoint) {
-            resultText += `1. Оптимальні змішані стратегії другого гравця (мінімакс):\n`;
-            resultText += `   q₁* = ${result.optimumPoint.p.toFixed(4)}\n`;
-            resultText += `   q₂* = ${(1-result.optimumPoint.p).toFixed(4)}\n\n`;
-            resultText += `2. Ціна гри: v = ${result.optimumPoint.v.toFixed(4)}\n`;
+            resultText += `   а) Оптимальна змішана стратегія другого гравця:\n`;
+            resultText += `      q1* = ${result.optimumPoint.p.toFixed(4)} (перша стратегія)\n`;
+            resultText += `      q2* = ${(1-result.optimumPoint.p).toFixed(4)} (друга стратегія)\n`;
+            resultText += `   б) Ціна гри: v = ${result.optimumPoint.v.toFixed(4)}\n`;
+            resultText += "   в) Геометричний зміст:\n";
+            resultText += "      - Точка мінімуму знаходиться на перетині прямих\n";
+            resultText += "      - Це забезпечує найменший гарантований програш\n";
+            resultText += "      - Відхилення від цієї точки невигідне другому гравцю\n\n";
         } else {
-            resultText += "Оптимальний розв'язок не знайдено в допустимій області (0,1)\n";
+            resultText += "   Оптимальний розв'язок не знайдено в допустимій області [0,1]\n";
+        }
+
+        // Mathematical verification
+        resultText += "4. Математична перевірка:\n";
+        resultText += "   а) Рівняння прямих для кожної стратегії:\n";
+        for (let i = 0; i < matrix.length; i++) {
+            resultText += `      H${i+1}(y) = ${matrix[i][0]}y + ${matrix[i][1]}(1-y)\n`;
         }
 
         document.getElementById('graphResultM2').textContent = resultText;
     } catch (error) {
         document.getElementById('graphResultM2').textContent = "Помилка: " + error.message;
     }
+}
+
+function createChartConfig(datasets, title, isM2 = false) {
+    return {
+        type: 'line',
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: title + '\n' + (isM2 ? 
+                        '(Верхня огинаюча визначає оптимальну стратегію)' : 
+                        '(Нижня огинаюча визначає оптимальну стратегію)'),
+                    font: { size: window.innerWidth < 768 ? 14 : 16 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.dataset.label === 'Оптимальна точка') {
+                                return `Опт. точка: (${context.parsed.x.toFixed(2)}, ${context.parsed.y.toFixed(2)})`;
+                            }
+                            return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        envelope: {
+                            type: 'line',
+                            borderColor: 'rgba(255, 99, 132, 0.5)',
+                            borderWidth: 2,
+                            label: {
+                                content: isM2 ? 'Верхня огинаюча' : 'Нижня огинаюча',
+                                enabled: true
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    title: {
+                        display: true,
+                        text: isM2 ? 
+                            'Ймовірність вибору першої стратегії другим гравцем (y)' : 
+                            'Ймовірність вибору першої стратегії першим гравцем (x)',
+                        font: { size: window.innerWidth < 768 ? 12 : 14 }
+                    },
+                    min: 0,
+                    max: 1
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: isM2 ? 
+                            'Значення функції виграшу H(y)' : 
+                            'Значення функції виграшу H(x)',
+                        font: { size: window.innerWidth < 768 ? 12 : 14 }
+                    }
+                }
+            }
+        }
+    };
 }
 
 function createChartDatasets(matrix, optimumPoint, isM2) {
