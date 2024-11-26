@@ -299,9 +299,8 @@ function solveLP() {
     try {
         const matrix = stringToMatrix(document.getElementById('lpMatrix').value);
         const rows = matrix.length;
-        const cols = matrix[0].length;
-
-        // Validate matrix has appropriate dimensions
+        const cols = matrix.length;
+        
         if (rows < 2 || cols < 2) {
             throw new Error('Матриця повинна мати розмір щонайменше 2×2');
         }
@@ -313,50 +312,51 @@ function solveLP() {
         result += "   Гравець 1 обирає рядок (має " + rows + " стратегій)\n";
         result += "   Гравець 2 обирає стовпець (має " + cols + " стратегій)\n\n";
 
-        result += "2. Задача максимізації для першого гравця:\n";
+        result += "2. Задача першого гравця:\n";
         result += "   а) Змінні: x1, x2, ..., x" + rows + "\n";
         result += "   б) Цільова функція:\n";
-        result += "      min(Z = x1 + x2 + ... + x" + rows + ")\n";
-        result += "      Z* - оптимальне значення цільової функції\n\n";
-        result += "   в) Обмеження:\n";
+        result += "      Z* = V → max\n";
+        result += "      max(Z = 1/(x1 + x2 + ... + x" + rows + ")) → Z* = V\n";
+        result += "      Після перетворення:\n";
+        result += "      min(Z = x1 + x2 + ... + x" + rows + ") → Z* = 1/V\n\n";
         
-        // Generate constraints for player 1
+        result += "   в) Обмеження:\n";
         for (let j = 0; j < cols; j++) {
             let constraint = matrix.map((row, i) => `${row[j]}x${i+1}`).join(' + ');
             result += `      ${constraint} ≥ 1\n`;
         }
         result += `      xi ≥ 0 для всіх i = 1,...,${rows}\n\n`;
 
-        result += "3. Задача мінімізації для другого гравця:\n";
+        result += "3. Задача другого гравця:\n";
         result += "   а) Змінні: y1, y2, ..., y" + cols + "\n";
         result += "   б) Цільова функція:\n";
-        result += "      max(F = y1 + y2 + ... + y" + cols + ")\n";
-        result += "      F* - оптимальне значення цільової функції\n\n";
-        result += "   в) Обмеження:\n";
+        result += "      F* = V → min\n";
+        result += "      min(F = 1/(y1 + y2 + ... + y" + cols + ")) → F* = V\n";
+        result += "      Після перетворення:\n";
+        result += "      max(F = y1 + y2 + ... + y" + cols + ") → F* = 1/V\n\n";
         
-        // Generate constraints for player 2
+        result += "   в) Обмеження:\n";
         for (let i = 0; i < rows; i++) {
             let constraint = matrix[i].map((val, j) => `${val}y${j+1}`).join(' + ');
             result += `      ${constraint} ≤ 1\n`;
         }
         result += `      yj ≥ 0 для всіх j = 1,...,${cols}\n\n`;
 
-        result += "4. Зв'язок між розв'язками:\n";
-        result += "   а) Оптимальні змішані стратегії першого гравця:\n";
-        result += "      pi = xi* × V, де V - ціна гри\n";
-        result += "      V = 1/Z* (де Z* - оптимальне значення першої задачі)\n\n";
-        result += "   б) Оптимальні змішані стратегії другого гравця:\n";
-        result += "      qj = yj* × V\n";
-        result += "      V = 1/F* (де F* - оптимальне значення другої задачі)\n\n";
+        result += "4. Взаємозв'язок розв'язків:\n";
+        result += "   а) Ціна гри:\n";
+        result += "      V = 1/Z* = 1/F*, де Z* і F* - оптимальні значення\n";
+        result += "      відповідних задач ЛП\n\n";
+        
+        result += "   б) Оптимальні змішані стратегії:\n";
+        result += "      Для першого гравця: pi = xi*/Z* для всіх i\n";
+        result += "      Для другого гравця: qj = yj*/F* для всіх j\n\n";
 
-        result += "5. Розв'язання:\n";
-        result += "   - Використати симплекс-метод для розв'язання обох задач\n";
-        result += "   - Визначити ціну гри: V = 1/Z* = 1/F*\n";
-        result += "   - Знайти оптимальні стратегії:\n";
-        result += "     для першого гравця: pi = xi*/Z* для всіх i\n";
-        result += "     для другого гравця: qj = yj*/F* для всіх j\n";
-        result += "   - Перевірити виконання умов оптимальності:\n";
-        result += "     Z* = F* - означає, що знайдено оптимальний розв'язок\n";
+        result += "5. Властивості розв'язку:\n";
+        result += "   - Задачі є взаємно двоїстими\n";
+        result += "   - Z* = F* у оптимальному розв'язку\n";
+        result += "   - Ціна гри: V = 1/Z* = 1/F*\n";
+        result += "   - Змішані стратегії утворюють сідлову точку\n";
+        result += "   - Отриманий розв'язок є оптимальним для обох гравців\n";
 
         document.getElementById('lpResult').textContent = result;
     } catch (error) {
